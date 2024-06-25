@@ -1,0 +1,13 @@
+extends layout
+
+block content
+  h1 Login Page
+
+  form(action="/auth/login", method="POST")
+    label(for="email") Email
+    input(type="email", id="email", name="email", placeholder="Enter your email", required)
+
+    label(for="password") Password
+    input(type="password", id="password", name="password", placeholder="Enter your password", required)
+
+    button(type="submit") Login
