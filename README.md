@@ -43,7 +43,9 @@
  2. Open your browser and navigate to           http://localhost:3000
 
 # Default User
+
 Username: admin@gmail.com
+
 Password: admin
  
 ## Detailed Requirements:
