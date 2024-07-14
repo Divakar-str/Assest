@@ -38,8 +38,8 @@
 
 # Usage
 
- 1.npm start
- 2.Open your browser and navigate to           http://localhost:3000
+ 1. npm start
+ 2. Open your browser and navigate to           http://localhost:3000
 
 # Default User
 
@@ -52,9 +52,7 @@
 
 2. Asset Master: Add/Edit/View all assets in the company. Provide filters for asset type, search by make/model etc. Each asset should be identifiable by its serial number as well as unique id.
 
-3. Asset Category Master: This will drive the various hardware types being used. Eg Laptop,
-
-Mobile Phone, Screw Driver, Drill Machine etc.
+3. Asset Category Master: This will drive the various hardware types being used. Eg Laptop,Mobile Phone, Screw Driver, Drill Machine etc.
 
 4. Stock View: Bird's eye view of assets in stock (i.e, ready to give to any employee). Show totals by branch along with total value in footer.
 
