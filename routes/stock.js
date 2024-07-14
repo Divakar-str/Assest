@@ -2,9 +2,15 @@ const express = require('express');
 const router = express.Router();
 const { Sequelize } = require('sequelize');
 const Asset = require('../models/Asset');
+const { getTokenFromCookies } = require('../utils/authUtils');
 
 // Route to display stock view
 router.get('/', async (req, res) => {
+    const token = getTokenFromCookies(req);
+
+    if (!token) {
+        return res.redirect('/login');
+    }
     try {
         // Aggregate assets by branch
         const stock = await Asset.findAll({

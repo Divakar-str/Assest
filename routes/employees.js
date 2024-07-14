@@ -5,9 +5,16 @@ const router = express.Router();
 const bcrypt = require('bcryptjs');
 const { Op } = require('sequelize');
 const Employee = require('../models/Employee');
+const { getTokenFromCookies } = require('../utils/authUtils');
 
 // GET all employees with filter and search
 router.get('/', async (req, res) => {
+
+    const token = getTokenFromCookies(req);
+
+    if (!token) {
+        return res.redirect('/login');
+    }
     try {
         let filter = {};
         if (req.query.isActive !== undefined && req.query.isActive !== '') {

@@ -5,9 +5,16 @@ const router = express.Router();
 const AssetEvent = require('../models/AssetEvent');
 const Asset = require('../models/Asset');
 const Employee = require('../models/Employee');
+const {getTokenFromCookies}= require('../utils/authUtils');
+
 
 // Route to display all asset events
 router.get('/', async (req, res) => {
+    const token = getTokenFromCookies(req);
+
+    if (!token) {
+        return res.redirect('/login');
+    }
     try {
         const assetEvents = await AssetEvent.findAll({
             include: [

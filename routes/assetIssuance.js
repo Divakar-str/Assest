@@ -5,9 +5,15 @@ const Asset = require('../models/Asset');
 const Employee = require('../models/Employee');
 const IssuedAsset = require('../models/IssuedAsset');
 const AssetEvent = require('../models/AssetEvent');
+const { getTokenFromCookies } = require('../utils/authUtils');
 
 // Get all issued assets
 router.get('/', async (req, res) => {
+    const token = getTokenFromCookies(req);
+
+    if (!token) {
+        return res.redirect('/login');
+    }
     try {
         const issuedAssets = await IssuedAsset.findAll({
             include: [

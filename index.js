@@ -7,7 +7,12 @@ require('dotenv').config();
 const path = require('path');
 
 const app = express();
+const cookieParser = require('cookie-parser');
 
+
+// Middleware setup
+app.use(express.json()); // Example middleware for JSON parsing
+app.use(cookieParser());
 const asyncDB = require('./async-db.js'); 
 
 // Middleware

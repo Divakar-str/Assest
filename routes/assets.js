@@ -2,9 +2,15 @@
 const express = require('express');
 const router = express.Router();
 const Asset = require('../models/Asset');
+const {getTokenFromCookies} = require('../utils/authUtils');
 
 // GET all assets
 router.get('/', async (req, res) => {
+    const token = getTokenFromCookies(req);
+
+    if (!token) {
+        return res.redirect('/login');
+    }
     try {
         // Fetch all assets initially
         const assets = await Asset.findAll();
