@@ -29,6 +29,7 @@
 1. Clone this repository
 2. npm install
 3. create .env
+   
    DB_HOST=localhost
    DB_PORT=5432
    DB_USER=myuser
@@ -42,9 +43,8 @@
  2. Open your browser and navigate to           http://localhost:3000
 
 # Default User
-
- Username: admin@gmail.com
- Password: admin
+Username: admin@gmail.com
+Password: admin
  
 ## Detailed Requirements:
 
