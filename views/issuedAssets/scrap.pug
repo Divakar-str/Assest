@@ -8,16 +8,16 @@ block content
           .card-header
            h2 Scrap Asset
           .card-body
-            form(action=`/asset-issuance/scrap/${issuedAsset._id}`, method='POST')
+            form(action=`/asset-issuance/scrap/${issuedAsset.id}`, method='POST')
               .row
                 .col-md-6
                   .form-group
                     label(for='asset') Asset
-                    input#asset.form-control(type='text', value=`${issuedAsset.asset.serialNumber} - ${issuedAsset.asset.type} (${issuedAsset.asset.make} ${issuedAsset.asset.model})`, readonly)
+                    input#asset.form-control(type='text', value=`${issuedAsset.Asset.serialNumber} - ${issuedAsset.Asset.type} (${issuedAsset.Asset.make} ${issuedAsset.Asset.model})`, readonly)
                 .col-md-6 
                   .form-group
                     label(for='employee') Employee
-                    input#employee.form-control(type='text', value=`${issuedAsset.employee.firstName} ${issuedAsset.employee.lastName}`, readonly)
+                    input#employee.form-control(type='text', value=`${issuedAsset.Employee.firstName} ${issuedAsset.Employee.lastName}`, readonly)
               .row
                 .col-md-6  
                   .form-group

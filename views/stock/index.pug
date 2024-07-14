@@ -16,12 +16,12 @@ block content
           each item in stock
             tr
               td
-                if item._id === 'all'
+                if item.branch === 'all'
                   | All
                 else
-                  a(href=`/stock/branch?branch=${item._id}`)= item._id
-              td= item.totalAssets
-              td= item.totalValue.toLocaleString('en-IN', { style: 'currency', currency: 'INR' })
+                  a(href=`/stock/branch?branch=${item.branch}`)= item.branch
+              td= item.getDataValue('totalAssets')
+              td= item.getDataValue('totalValue').toLocaleString('en-IN', { style: 'currency', currency: 'INR' })
     else
       p No assets available.
 

@@ -21,13 +21,13 @@ block content
             tbody
               each issuedAsset in issuedAssets
                 tr
-                  td= `${issuedAsset.asset.serialNumber} - ${issuedAsset.asset.type} (${issuedAsset.asset.make} ${issuedAsset.asset.model})`
-                  td= `${issuedAsset.employee.firstName} ${issuedAsset.employee.lastName}`
+                  td= `${issuedAsset.Asset.serialNumber} - ${issuedAsset.Asset.type} (${issuedAsset.Asset.make} ${issuedAsset.Asset.model})`
+                  td= `${issuedAsset.Employee.firstName} ${issuedAsset.Employee.lastName}`
                   td= issuedAsset.issuedDate.toDateString()
                   td= issuedAsset.status
                   td.text-right
                     if issuedAsset.status === 'issued'
                       .btn-group
-                        a.btn.btn-warning.btn-sm(href=`/asset-issuance/return/${issuedAsset._id}`) Return
-                        a.btn.btn-danger.btn-sm.ml-2(href=`/asset-issuance/scrap/${issuedAsset._id}`) Scrap
+                        a.btn.btn-warning.btn-sm(href=`/asset-issuance/return/${issuedAsset.id}`) Return
+                        a.btn.btn-danger.btn-sm.ml-2(href=`/asset-issuance/scrap/${issuedAsset.id}`) Scrap
 

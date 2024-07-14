@@ -1,86 +1,114 @@
 const express = require('express');
 const router = express.Router();
-const IssuedAsset = require('../models/IssuedAsset');
+const { Op } = require('sequelize');
 const Asset = require('../models/Asset');
 const Employee = require('../models/Employee');
-const AssetEvent = require('../models/AssetEvent'); // Assuming you have AssetEvent model for tracking history
+const IssuedAsset = require('../models/IssuedAsset');
+const AssetEvent = require('../models/AssetEvent');
 
 // Get all issued assets
 router.get('/', async (req, res) => {
     try {
-        const issuedAssets = await IssuedAsset.find()
-            .populate('asset')
-            .populate('employee');
+        const issuedAssets = await IssuedAsset.findAll({
+            include: [
+                { model: Asset },
+                { model: Employee }
+            ]
+        });
         res.render('issuedAssets/index', { issuedAssets });
+      
+    
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');
     }
 });
+
 
 router.get('/issue', async (req, res) => {
     try {
         // Find all assets with remaining quantity
-        const assets = await Asset.find({ quantity: { $gt: 0 } });
-       
+        const assets = await Asset.findAll({
+            where: {
+                quantity: {
+                    [Op.gt]: 0
+                }
+            }
+        });
 
         // Calculate remaining quantity for each asset
         for (let asset of assets) {
-            const issuedAssets = await IssuedAsset.find({ asset: asset._id, status: { $ne: 'returned' } });
-            const totalIssued = issuedAssets.reduce((acc, curr) => acc + curr.quantity, 0);
-            asset.remainingQuantity = asset.quantity - totalIssued;
-            
+            // Calculate remaining quantity as available quantity - assigned quantity
+            asset.remainingQuantity = asset.quantity - asset.assignedquantity;
         }
 
-        // Filter out assets with remaining quantity 0
+        // Filter out assets with remaining quantity > 0
         const assetsWithRemaining = assets.filter(asset => asset.remainingQuantity > 0);
-        
-        const employees = await Employee.find();
-        res.render('issuedAssets/issue', { assets: assetsWithRemaining, employees });
+
+        // Fetch all employees for the issuance form
+        const employees = await Employee.findAll();
+
+        // Render the issue form with assets and employees data
+        res.render('issuedAssets/issue', {
+            assets: assetsWithRemaining,
+            employees: employees
+        });
+        // console.log(assetsWithRemaining);
+        // console.log(employees);
     } catch (err) {
         console.error(err);
         res.status(500).send('Server Error');
     }
 });
 
+
+
+
+// Issue an asset
 router.post('/issue', async (req, res) => {
     try {
-        const { asset: assetId, employee, quantity, branch, notes } = req.body;
+        const { assetId, employeeId, quantity, branch, notes } = req.body;
+      
+
+        // Find the asset by ID
+        const asset = await Asset.findByPk(assetId);
+        if (!asset) {
+            throw new Error('Asset not found');
+        }
 
         // Check if there are enough units available to issue
-        const asset = await Asset.findById(assetId);
-        const issuedAssets = await IssuedAsset.find({ asset: assetId, status: { $ne: 'returned' } });
-        const totalIssued = issuedAssets.reduce((acc, curr) => acc + curr.quantity, 0);
-        const remainingQuantity = asset.quantity - totalIssued;
-
-        if (quantity > remainingQuantity) {
+        if (quantity > asset.quantity - asset.assignedquantity) {
             throw new Error('Not enough units available to issue');
         }
 
-        // Create a new IssuedAsset document
-        const newIssuedAsset = new IssuedAsset({ asset: assetId, employee, quantity, branch, notes });
-        await newIssuedAsset.save();
+        // Create a new IssuedAsset record
+        const newIssuedAsset = await IssuedAsset.create({
+            assetId,
+            employeeId,
+            quantity,
+            branch,
+            notes
+        });
 
-        // Update the assignedquantity in Asset model
+        // Update assignedquantity in Asset model
         asset.assignedquantity += parseInt(quantity);
         await asset.save();
 
         // Create AssetEvent for the issuance
-        const assetEvent = new AssetEvent({
-            asset: assetId,
+        await AssetEvent.create({
+            assetId,
             eventType: 'issued',
             eventDate: new Date(),
-            employee,
+            employeeId,
             quantity,
-            location: branch, // Assuming branch is the location for issuance
+            location: branch,
             notes
         });
-        await assetEvent.save();
 
         res.redirect('/asset-issuance');
     } catch (err) {
         console.error(err);
-        res.status(500).send(err.message || 'Server Error');
+        res.status(500).send('Server Error');
     }
 });
 
@@ -88,9 +116,12 @@ router.post('/issue', async (req, res) => {
 // Show form to return an asset
 router.get('/return/:id', async (req, res) => {
     try {
-        const issuedAsset = await IssuedAsset.findById(req.params.id)
-            .populate('asset')
-            .populate('employee');
+        const issuedAsset = await IssuedAsset.findByPk(req.params.id, {
+            include: [
+                { model: Asset },
+                { model: Employee }
+            ]
+        });
         res.render('issuedAssets/return', { issuedAsset });
     } catch (err) {
         console.error(err);
@@ -105,7 +136,7 @@ router.post('/return/:id', async (req, res) => {
         const issuedAssetId = req.params.id;
 
         // Find the issued asset to return
-        const issuedAsset = await IssuedAsset.findById(issuedAssetId);
+        const issuedAsset = await IssuedAsset.findByPk(issuedAssetId);
         if (!issuedAsset) {
             return res.status(404).send('Issued Asset not found');
         }
@@ -118,7 +149,7 @@ router.post('/return/:id', async (req, res) => {
         await issuedAsset.save();
 
         // Find the corresponding asset and decrease its assigned quantity
-        const asset = await Asset.findById(issuedAsset.asset);
+        const asset = await Asset.findByPk(issuedAsset.assetId);
         if (!asset) {
             return res.status(404).send('Asset not found');
         }
@@ -127,16 +158,16 @@ router.post('/return/:id', async (req, res) => {
         await asset.save();
 
         // Create an asset event for return
-        const assetEvent = new AssetEvent({
-            asset: issuedAsset.asset,
+        await AssetEvent.create({
+            assetId: issuedAsset.assetId,
             eventType: 'returned',
-            employee: issuedAsset.employee,
+            eventDate: new Date(),
+            employeeId: issuedAsset.employeeId,
             quantity: issuedAsset.quantity,
             branch: issuedAsset.branch,
             notes,
             reasonForReturn
         });
-        await assetEvent.save();
 
         res.redirect('/asset-issuance');
     } catch (err) {
@@ -148,9 +179,12 @@ router.post('/return/:id', async (req, res) => {
 // Show form to scrap an asset
 router.get('/scrap/:id', async (req, res) => {
     try {
-        const issuedAsset = await IssuedAsset.findById(req.params.id)
-            .populate('asset')
-            .populate('employee');
+        const issuedAsset = await IssuedAsset.findByPk(req.params.id, {
+            include: [
+                { model: Asset },
+                { model: Employee }
+            ]
+        });
         res.render('issuedAssets/scrap', { issuedAsset });
     } catch (err) {
         console.error(err);
@@ -164,25 +198,40 @@ router.post('/scrap/:id', async (req, res) => {
         const { returnedDate, reasonForReturn, notes } = req.body;
 
         // Find the issued asset and update status
-        const issuedAsset = await IssuedAsset.findById(req.params.id);
-        await IssuedAsset.findByIdAndUpdate(req.params.id, { returnedDate, reasonForReturn, notes, status: 'scrapped' });
+        const issuedAsset = await IssuedAsset.findByPk(req.params.id);
+        if (!issuedAsset) {
+            return res.status(404).send('Issued Asset not found');
+        }
+
+        await IssuedAsset.update({
+            returnedDate,
+            reasonForReturn,
+            notes,
+            status: 'scrapped'
+        }, {
+            where: { id: req.params.id }
+        });
 
         // Update the quantity and assignedquantity in Asset model
-        const asset = await Asset.findById(issuedAsset.asset);
+        const asset = await Asset.findByPk(issuedAsset.assetId);
+        if (!asset) {
+            return res.status(404).send('Asset not found');
+        }
+
         asset.quantity -= issuedAsset.quantity; // Reduce total quantity
         asset.assignedquantity -= issuedAsset.quantity; // Reduce assigned quantity
         await asset.save();
 
         // Create an asset event for scrap
-        const assetEvent = new AssetEvent({
-            asset: issuedAsset.asset,
+        await AssetEvent.create({
+            assetId: issuedAsset.assetId,
             eventType: 'scrapped',
+            eventDate: new Date(),
+            employeeId: issuedAsset.employeeId,
+            quantity: issuedAsset.quantity,
             notes,
-            reasonForReturn,
-            employee: issuedAsset.employee,
-            quantity: issuedAsset.quantity
+            reasonForReturn
         });
-        await assetEvent.save();
 
         res.redirect('/asset-issuance');
     } catch (err) {
@@ -194,11 +243,12 @@ router.post('/scrap/:id', async (req, res) => {
 // Get asset history
 router.get('/history/:id', async (req, res) => {
     try {
-        const assetEvents = await AssetEvent.find({ asset: req.params.id })
-            .populate('asset')
-            .populate('employee'); // Assuming you populate employee field if needed
+        const assetEvents = await AssetEvent.findAll({
+            where: { assetId: req.params.id },
+            include: [Asset, Employee]
+        });
 
-        const asset = await Asset.findById(req.params.id);
+        const asset = await Asset.findByPk(req.params.id);
 
         res.render('issuedAssets/history', { asset, assetEvents });
     } catch (err) {
@@ -206,6 +256,5 @@ router.get('/history/:id', async (req, res) => {
         res.status(500).send('Server Error');
     }
 });
-
 
 module.exports = router;

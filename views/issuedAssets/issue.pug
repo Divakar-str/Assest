@@ -9,21 +9,21 @@ block content
             h2 Issue Asset
           .card-body
             form(action='/asset-issuance/issue', method='POST')
-              .row 
+              .row
                 .col-md-6
                   .form-group
-                    label(for='asset') Select Asset
-                    select#asset.form-control(name='asset' required)
+                    label(for='assetId') Select Asset
+                    select#asset.form-control(name='assetId' required)
                       option(value='') Select Asset
                       each asset in assets
-                        option(value=`${asset._id}`)= `${asset.serialNumber} (${asset.remainingQuantity} remaining)`
+                        option(value=asset.id)= `${asset.assetId} (${asset.remainingQuantity} remaining)`
                 .col-md-6
                   .form-group
                     label(for='employee') Select Employee
-                    select#employee.form-control(name='employee' required)
+                    select#employee.form-control(name='employeeId' required)
                       option(value='') Select Employee
                       each employee in employees
-                        option(value=`${employee._id}`)= `${employee.firstName} ${employee.lastName}`
+                        option(value=employee.id)= `${employee.firstName} ${employee.lastName}`
               .row
                 .col-md-6
                   .form-group
@@ -43,6 +43,6 @@ block content
                   .form-group
                     label(for='notes') Notes
                     textarea#notes.form-control(name='notes' rows='3')
-              .row 
-                .col-md-6 
+              .row
+                .col-md-6
                   button.btn.btn-primary(type='submit') Issue Asset

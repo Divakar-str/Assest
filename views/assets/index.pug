@@ -47,8 +47,8 @@ block content
                     td= asset.description
                     td.text-right
                       .btn-group
-                        a.btn.btn-sm.btn-info(href=`/assets/edit/${asset._id}`) Edit
-                        form(action=`/assets/delete/${asset._id}`, method='POST', onsubmit='return confirm("Are you sure you want to delete this asset?");')
+                        a.btn.btn-sm.btn-info(href=`/assets/edit/${asset.id}`) Edit
+                        form(action=`/assets/delete/${asset.id}`, method='POST', onsubmit='return confirm("Are you sure you want to delete this asset?");')
                           button.btn.btn-sm.btn-danger.ml-2(type='submit') Delete
   script.
     $(document).ready(function() {

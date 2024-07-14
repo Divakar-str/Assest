@@ -1,15 +1,55 @@
-const mongoose = require('mongoose');
+// IssuedAsset.js
 
-const issuedAssetSchema = new mongoose.Schema({
-    asset: { type: mongoose.Schema.Types.ObjectId, ref: 'Asset', required: true },
-    employee: { type: mongoose.Schema.Types.ObjectId, ref: 'Employee', required: true },
-    issuedDate: { type: Date, default: Date.now },
-    returnedDate: { type: Date },
-    quantity: { type: Number, default: 1 },
-    branch: { type: String },
-    notes: { type: String },
-    status: { type: String, enum: ['issued', 'returned', 'scrapped'], default: 'issued' },
-    reasonForReturn: { type: String } 
+const { DataTypes } = require('sequelize');
+const sequelize = require('./db'); // Adjust the path as per your project structure
+const Asset = require('./Asset');
+const Employee = require('./Employee');
+
+const IssuedAsset = sequelize.define('IssuedAsset', {
+    assetId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: Asset,
+            key: 'id'
+        }
+    },
+    employeeId: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: Employee,
+            key: 'id'
+        }
+    },
+    issuedDate: {
+        type: DataTypes.DATE,
+        defaultValue: DataTypes.NOW
+    },
+    returnedDate: {
+        type: DataTypes.DATE
+    },
+    quantity: {
+        type: DataTypes.INTEGER,
+        defaultValue: 1
+    },
+    branch: {
+        type: DataTypes.STRING
+    },
+    notes: {
+        type: DataTypes.STRING
+    },
+    status: {
+        type: DataTypes.ENUM('issued', 'returned', 'scrapped'),
+        defaultValue: 'issued'
+    },
+    reasonForReturn: {
+        type: DataTypes.STRING
+    }
 });
 
-module.exports = mongoose.model('IssuedAsset', issuedAssetSchema);
+// Define associations after model definitions
+IssuedAsset.belongsTo(Asset, { foreignKey: 'assetId' });
+IssuedAsset.belongsTo(Employee, { foreignKey: 'employeeId' });
+
+module.exports = IssuedAsset;

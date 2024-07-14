@@ -1,18 +1,42 @@
-// models/Asset.js
+const { DataTypes } = require('sequelize');
+const sequelize = require('./db');
 
-const mongoose = require('mongoose');
-
-const assetSchema = new mongoose.Schema({
-    serialNumber: { type: String, required: true, unique: true },
-    assetId: { type: String, required: true },
-    type: { type: String, required: true },
-    make: { type: String },
-    model: { type: String },
-    description: { type: String },
-    quantity: { type: Number },
-    price:{ type: Number },
-    branch: { type: String },
-    assignedquantity: { type: Number , default: 0}
+const Asset = sequelize.define('Asset', {
+    serialNumber: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        unique: true
+    },
+    assetId: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    type: {
+        type: DataTypes.STRING,
+        allowNull: false
+    },
+    make: {
+        type: DataTypes.STRING
+    },
+    model: {
+        type: DataTypes.STRING
+    },
+    description: {
+        type: DataTypes.STRING
+    },
+    quantity: {
+        type: DataTypes.INTEGER
+    },
+    price: {
+        type: DataTypes.DECIMAL
+    },
+    branch: {
+        type: DataTypes.STRING
+    },
+    assignedquantity: {
+        type: DataTypes.INTEGER,
+        defaultValue: 0
+    }
 });
 
-module.exports = mongoose.model('Asset', assetSchema);
+module.exports = Asset;

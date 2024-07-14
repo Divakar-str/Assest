@@ -1,45 +1,34 @@
-const mongoose = require('mongoose');
+const { DataTypes } = require('sequelize');
+const sequelize = require('./db');
 const bcrypt = require('bcryptjs');
 
-// Generate a constant salt for password hashing
-const SALT_ROUNDS = 10; // Adjust this as needed
+const SALT_ROUNDS = 10;
 const CONSTANT_SALT = bcrypt.genSaltSync(SALT_ROUNDS);
 
-const employeeSchema = new mongoose.Schema({
-    firstName: { type: String, required: true },
-    lastName: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
-    department: { type: String, required: true },
-    position: { type: String, required: true },
-    password: { type: String, required: true }, 
-    isActive: { type: Boolean, default: true },
-    salary: { type: Number, required: true },
-    branch: { type: String, required: true },
-    isAssetIssuer: { type: Boolean, default: false },
-    dateJoined: { type: Date, default: Date.now },
-    dateTerminate: { type: Date }
-});
-
-// Hash the password before saving
-employeeSchema.pre('save', function(next) {
-    const employee = this;
-
-    // Only hash the password if it has been modified or is new
-    if (!employee.isModified('password')) {
-        return next();
-    }
-
-    try {
-        // Hash the password with the constant salt
-        const hashedPassword = bcrypt.hashSync(employee.password, CONSTANT_SALT);
-        
-        // Replace plain password with hashed password
-        employee.password = hashedPassword;
-
-        return next();
-    } catch (error) {
-        return next(error);
+const Employee = sequelize.define('Employee', {
+    firstName: { type: DataTypes.STRING, allowNull: false },
+    lastName: { type: DataTypes.STRING, allowNull: false },
+    email: { type: DataTypes.STRING, allowNull: false, unique: true },
+    department: { type: DataTypes.STRING, allowNull: false },
+    position: { type: DataTypes.STRING, allowNull: false },
+    password: { type: DataTypes.STRING, allowNull: false },
+    isActive: { type: DataTypes.BOOLEAN, defaultValue: true },
+    salary: { type: DataTypes.INTEGER, allowNull: false },
+    branch: { type: DataTypes.STRING, allowNull: false },
+    isAssetIssuer: { type: DataTypes.BOOLEAN, defaultValue: false },
+    dateJoined: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
+    dateTerminate: { type: DataTypes.DATE }
+}, {
+    hooks: {
+        beforeCreate: async (employee) => {
+            employee.password = await bcrypt.hash(employee.password, CONSTANT_SALT);
+        },
+        beforeUpdate: async (employee) => {
+            if (employee.changed('password')) {
+                employee.password = await bcrypt.hash(employee.password, CONSTANT_SALT);
+            }
+        }
     }
 });
 
-module.exports = mongoose.model('Employee', employeeSchema);
+module.exports = Employee;
